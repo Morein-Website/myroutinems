@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Weekly Routine — Smooth Animated</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#7dd3fc; --muted:#94a3b8; --glass: rgba(255,255,255,0.04);
+      --glass-2: rgba(255,255,255,0.03);
+      --glass-3: rgba(125,211,252,0.06);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(45,55,72,0.25), transparent),
+                  radial-gradient(1000px 500px at 90% 90%, rgba(34,197,94,0.06), transparent),
+                  var(--bg);
+      color:#e6eef8; -webkit-font-smoothing:antialiased;
+      padding:32px;
+    }
+    .container{max-width:1100px;margin:0 auto}
+
+    header{
+      display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:20px;
+    }
+    .brand{display:flex;gap:14px;align-items:center}
+    .logo{
+      width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#60a5fa);
+      display:grid;place-items:center;color:#04263b;font-weight:700;font-size:20px;box-shadow:0 6px 20px rgba(125,211,252,0.08);
+      transform:rotate(-8deg);
+    }
+    h1{margin:0;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .controls{display:flex;gap:10px;align-items:center}
+    .btn{background:linear-gradient(180deg,var(--glass),var(--glass-2));border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:10px;color:var(--accent);cursor:pointer;backdrop-filter:blur(6px);transition:all .25s}
+    .btn:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(125,211,252,0.06)}
+
+    /* week grid */
+    .week{display:grid;grid-template-columns:repeat(7,1fr);gap:14px;margin-top:20px}
+    .day{
+      background:linear-gradient(180deg,var(--card), rgba(11,18,32,0.6));padding:14px;border-radius:14px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.03);
+      min-height:320px;display:flex;flex-direction:column;transition:transform .35s ease, box-shadow .35s ease;
+    }
+    .day:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(2,6,23,0.6)}
+
+    .day .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .day .title{font-weight:700}
+    .day .sub{font-size:12px;color:var(--muted)}
+
+    .schedule{flex:1;display:flex;flex-direction:column;gap:8px}
+    .item{
+      display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.02);backdrop-filter:blur(4px);transition:transform .18s ease, box-shadow .18s ease
+    }
+    .item:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(2,6,23,0.6)}
+    .time{font-size:12px;color:var(--muted);width:78px}
+    .task{flex:1;padding-left:12px;font-size:14px}
+
+    .check{width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);display:grid;place-items:center;cursor:pointer;transition:all .18s}
+    .check.done{background:linear-gradient(90deg,var(--accent),#60a5fa);color:#04263b;border:none;transform:scale(1.05)}
+
+    /* animated accent shapes */
+    .day::after{content:"";position:absolute;right:-60px;top:-40px;width:180px;height:180px;background:radial-gradient(circle at 30% 30%, rgba(125,211,252,0.06), transparent 35%);transform:rotate(10deg);pointer-events:none}
+
+    /* detail popup */
+    .detail{position:fixed;right:24px;bottom:24px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));border-radius:12px;padding:14px;min-width:260px;border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(8px);box-shadow:0 18px 50px rgba(2,6,23,0.7);opacity:0;transform:translateY(20px);transition:all .35s;pointer-events:none}
+    .detail.show{opacity:1;transform:translateY(0);pointer-events:auto}
+
+    footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+
+    /* responsive */
+    @media (max-width:1000px){.week{grid-template-columns:repeat(2,1fr)}.day{min-height:260px}}
+    @media (max-width:520px){.week{grid-template-columns:1fr}.controls{flex-direction:column;align-items:flex-end}}
+
+    /* subtle entrance */
+    @keyframes floatIn{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
+    .day{animation:floatIn .5s ease both}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">R</div>
+        <div>
+          <h1>Weekly Routine — Smooth UI</h1>
+          <p class="lead">Follow your madrasa + Arabic + Roblox dev routine. Click any item to mark done.</p>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="todayBtn">Highlight Today</button>
+        <button class="btn" id="resetBtn">Reset Checks</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="week" id="week">
+        <!-- days will be injected by JS -->
+      </div>
+    </main>
+
+    <footer>Made for you — follow this routine & stay consistent ✨</footer>
+  </div>
+
+  <div class="detail" id="detail">Tap a task to mark complete. Your progress is stored locally.</div>
+
+  <script>
+    const data = {
+      "Sunday-Thursday": [
+        ["7:00–7:30 AM","Wake up & Freshen up"],
+        ["7:30–8:00 AM","Tea & Breakfast"],
+        ["8:00–9:00 AM","Arabic Writing Practice"],
+        ["9:00–9:45 AM","Get Ready & Leave for Madrasa"],
+        ["10:00 AM–4:00 PM","Madrasa (Study & Prayer)"],
+        ["4:00–4:30 PM","Return Home & Refresh"],
+        ["4:30–5:00 PM","Evening Snack / Break"],
+        ["5:00–6:30 PM","Roblox Game Development"],
+        ["6:30–7:30 PM","Maghrib & Dinner"],
+        ["7:30–8:00 PM","Quran / Arabic Reading"],
+        ["8:00–9:30 PM","Game Dev / Study Mix"],
+        ["9:30–10:30 PM","Relax / Sleep Prep"]
+      ],
+      "Friday": [
+        ["7:30–8:00 AM","Wake up & Tea"],
+        ["8:00–9:00 AM","Quran & Arabic Reading"],
+        ["9:30–11:00 AM","Roblox Game Development"],
+        ["12:00–1:00 PM","Jummah Prep & Prayer"],
+        ["2:00–4:00 PM","Arabic Writing Practice"],
+        ["4:00–5:00 PM","Fun Time"],
+        ["7:00–10:00 PM","Relax / Family"]
+      ],
+      "Saturday": [
+        ["7:00–8:00 AM","Wake up & Tea"],
+        ["8:00–9:00 AM","Arabic Review"],
+        ["9:00–12:00 PM","Roblox Deep Work"],
+        ["1:00–2:00 PM","Lunch & Rest"],
+        ["2:00–5:00 PM","Game Development"],
+        ["7:00–8:00 PM","Study / Quran"],
+        ["8:00–10:00 PM","Optional Roblox Work"]
+      ]
+    };
+
+    const weekOrder = ["Sunday-Thursday","Friday","Saturday"];
+
+    const weekEl = document.getElementById('week');
+    const detail = document.getElementById('detail');
+
+    function loadState(){
+      try{ return JSON.parse(localStorage.getItem('routineChecks')||'{}') }catch(e){return{}}
+    }
+    function saveState(s){ localStorage.setItem('routineChecks', JSON.stringify(s)) }
+
+    let state = loadState();
+
+    function makeDayCard(name, items){
+      const d = document.createElement('div'); d.className='day';
+      const head = document.createElement('div'); head.className='head';
+      const t = document.createElement('div'); t.className='title'; t.textContent = name;
+      const s = document.createElement('div'); s.className='sub'; s.textContent = items.length+' tasks';
+      head.appendChild(t); head.appendChild(s); d.appendChild(head);
+
+      const sc = document.createElement('div'); sc.className='schedule';
+      items.forEach((it, idx)=>{
+        const key = name+':'+idx;
+        const item = document.createElement('div'); item.className='item';
+        const left = document.createElement('div'); left.style.display='flex'; left.style.alignItems='center';
+        const time = document.createElement('div'); time.className='time'; time.textContent=it[0];
+        const task = document.createElement('div'); task.className='task'; task.textContent=it[1];
+        left.appendChild(time); left.appendChild(task);
+        const chk = document.createElement('div'); chk.className='check'; chk.innerHTML='⚪';
+        if(state[key]){ chk.classList.add('done'); chk.innerHTML='✔︎' }
+        chk.addEventListener('click', ()=>{
+          state[key] = !state[key]; saveState(state);
+          chk.classList.toggle('done'); chk.innerHTML = state[key] ? '✔︎' : '⚪';
+        });
+        item.appendChild(left); item.appendChild(chk);
+        item.addEventListener('mouseenter', ()=>{ detail.classList.add('show'); detail.textContent = it[0] + ' — ' + it[1]; })
+        item.addEventListener('mouseleave', ()=>{ detail.classList.remove('show'); })
+        sc.appendChild(item);
+      });
+
+      d.appendChild(sc);
+      return d;
+    }
+
+    function render(){
+      weekEl.innerHTML='';
+      // Expand Sunday-Thursday into 4 columns by duplicating as single logical day block but visually use 4 columns by merging? Simpler: render one card for Sun-Thu but user wanted 7 days -> we'll render separate day cards for Sun, Mon, Tue, Wed, Thu with same schedule.
+      const sunThuItems = data['Sunday-Thursday'];
+      ['Sunday','Monday','Tuesday','Wednesday','Thursday'].forEach(dayName=>{
+        weekEl.appendChild(makeDayCard(dayName, sunThuItems));
+      });
+      weekOrder.slice(1).forEach(k=>{
+        weekEl.appendChild(makeDayCard(k, data[k]));
+      });
+    }
+
+    render();
+
+    document.getElementById('resetBtn').addEventListener('click', ()=>{ state={}; saveState(state); render(); detail.classList.add('show'); detail.textContent='All checks reset'; setTimeout(()=>detail.classList.remove('show'),1400); });
+
+    document.getElementById('todayBtn').addEventListener('click', ()=>{
+      const now = new Date();
+      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const today = days[now.getDay()];
+      // find first .day with title matching
+      const cards = document.querySelectorAll('.day');
+      cards.forEach(c=>{ c.style.borderColor='rgba(255,255,255,0.03)'; c.style.transform='none' });
+      for(const c of cards){ if(c.querySelector('.title').textContent===today){ c.style.borderColor='rgba(125,211,252,0.25)'; c.style.boxShadow='0 28px 80px rgba(125,211,252,0.08)'; c.scrollIntoView({behavior:'smooth', block:'center'}); break } }
+    });
+
+    // small animate on load
+    window.addEventListener('load', ()=>{ setTimeout(()=>document.querySelectorAll('.day').forEach((n,i)=>n.style.animationDelay=(i*60)+'ms'),20) });
+  </script>
+</body>
+</html>
